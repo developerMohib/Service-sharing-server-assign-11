@@ -10,7 +10,7 @@ app.use(express.json())
 
 // MongoDB Connection
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ylmjbhk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
@@ -26,7 +26,24 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
+    const database = client.db("educationServices");
+    const eduServCollection = database.collection("onlineCourse");
+
+    // Educational all service get
+    app.get('/eduServices', async(req, res) => {
+        const cursor = eduServCollection.find( ) ;
+        const result = await cursor.toArray( ) ;
+        res.send(result)
+    })
+    // find a data by id query 
+    app.get('/eduServices/:id',async(req, res) => {
+        const id = req.params.id ;
+        const query = { _id: new ObjectId(id) };
+        const result = await eduServCollection.findOne(query);
+        res.send(result)
+    })
+
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
