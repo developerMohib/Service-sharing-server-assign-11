@@ -29,6 +29,7 @@ async function run() {
     // await client.connect();
     const database = client.db("educationServices");
     const eduServCollection = database.collection("onlineCourse");
+    const bookedCollection = database.collection("bookedCourse");
 
     // Educational all service get
     app.get('/eduServices', async(req, res) => {
@@ -44,9 +45,34 @@ async function run() {
         res.send(result)
     })
 
+    // find data by email 
+    // app.get('/eduServices/:email', async(req,res) => {
+    //   const email = req.params.email;
+    //   console.log(email)
+    //   const cursor = { providerEmail: "email" };
+    //   const result = await eduServCollection.find(cursor).toArray() ;
+    //   res.send(result)
+    // })
+
+    // data post from provider 
+    app.post('/eduServices',async(req,res) => {
+      const addData = req.body ;
+      console.log(addData);
+      const result = await eduServCollection.insertOne(addData) ;
+      res.send(result)
+    })
+
+    // Booked Data from client
+    app.post('/bookServices',async(req,res) => {
+      const bookData = req.body ;
+      console.log(bookData);
+      const result = await bookedCollection.insertOne(addData) ;
+      res.send(result)
+    })
+
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log ("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
     // Ensures that the client will close when you finish/error
   }
