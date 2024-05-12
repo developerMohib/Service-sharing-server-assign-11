@@ -75,8 +75,7 @@ async function run() {
       const result = await eduServCollection.updateOne(query, updateDoc, options);
       res.send(result)
     })
-
-
+    
     // data post from provider 
     app.post('/eduServices',async(req,res) => {
       const addData = req.body ;
@@ -88,6 +87,13 @@ async function run() {
     app.post('/bookedServices',async(req,res) => {
       const bookData = req.body ;
       const result = await bookedCollection.insertOne(bookData) ;
+      res.send(result)
+    })
+    // delete data from manage router
+    app.delete('/eduServices/:id',async(req,res) => {
+      const id = req.params.id ;
+      const query = {_id : new ObjectId(id)} ;
+      const result = await eduServCollection.deleteOne(query);
       res.send(result)
     })
     // delete data from manage router
