@@ -8,6 +8,7 @@ const port = process.env.PORT || 5000 ;
 app.use(cors());
 app.use(express.json())
 
+
 // MongoDB Connection
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -55,19 +56,34 @@ async function run() {
     // find data by email 
     app.get('/bookedServices/:email', async(req,res) => {
       const email = req.params.email;
-      console.log(email)
       const cursor = { currentUserEmail: email };
       const result = await bookedCollection.find(cursor).toArray() ;
       res.send(result)
     })
+    
+    // update data from manage route
+    app.put('/eduServices/:id', async(req, res) => {
+      const id = req.params.id ;
+      const query = {_id : new ObjectId(id)} ;
+      const updateServiceData = req.body ; 
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          ...updateServiceData,
+        },
+      }
+      const result = await eduServCollection.updateOne(query, updateDoc, options);
+      res.send(result)
+    })
+
 
     // data post from provider 
     app.post('/eduServices',async(req,res) => {
       const addData = req.body ;
-      console.log(addData);
       const result = await eduServCollection.insertOne(addData) ;
       res.send(result)
     })
+
     // Booked Data from client
     app.post('/bookedServices',async(req,res) => {
       const bookData = req.body ;
