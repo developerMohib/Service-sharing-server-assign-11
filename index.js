@@ -37,6 +37,13 @@ async function run() {
         const result = await cursor.toArray( ) ;
         res.send(result)
     })
+    // Book all service get
+    app.get('/bookedServices', async(req, res) => {
+        const cursor = bookedCollection.find( ) ;
+        const result = await cursor.toArray( ) ;
+        res.send(result)
+    })
+
     // find a data by id query 
     app.get('/eduServices/:id',async(req, res) => {
         const id = req.params.id ;
@@ -46,9 +53,12 @@ async function run() {
     })
 
     // find data by email 
-    // app.get('/eduServices/:email', async(req,res) => {
-    //   const email = req.params.email;
-    //   console.log(email)
+    // app.get('/eduServices', async(req,res) => {
+    //   const myemail = req.query.email ;
+    //   console.log(myemail)
+    //   // const email = req.params.email;
+    //   // console.log(email)
+    //   return
     //   const cursor = { providerEmail: "email" };
     //   const result = await eduServCollection.find(cursor).toArray() ;
     //   res.send(result)
@@ -61,12 +71,10 @@ async function run() {
       const result = await eduServCollection.insertOne(addData) ;
       res.send(result)
     })
-
     // Booked Data from client
-    app.post('/bookServices',async(req,res) => {
+    app.post('/bookedServices',async(req,res) => {
       const bookData = req.body ;
-      console.log(bookData);
-      const result = await bookedCollection.insertOne(addData) ;
+      const result = await bookedCollection.insertOne(bookData) ;
       res.send(result)
     })
 
