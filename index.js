@@ -53,16 +53,13 @@ async function run() {
     })
 
     // find data by email 
-    // app.get('/eduServices', async(req,res) => {
-    //   const myemail = req.query.email ;
-    //   console.log(myemail)
-    //   // const email = req.params.email;
-    //   // console.log(email)
-    //   return
-    //   const cursor = { providerEmail: "email" };
-    //   const result = await eduServCollection.find(cursor).toArray() ;
-    //   res.send(result)
-    // })
+    app.get('/bookedServices/:email', async(req,res) => {
+      const email = req.params.email;
+      console.log(email)
+      const cursor = { currentUserEmail: email };
+      const result = await bookedCollection.find(cursor).toArray() ;
+      res.send(result)
+    })
 
     // data post from provider 
     app.post('/eduServices',async(req,res) => {
