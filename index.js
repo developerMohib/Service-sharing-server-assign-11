@@ -25,6 +25,7 @@ const client = new MongoClient(uri, {
 });
 
 async function run() {
+
   try {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
@@ -60,19 +61,25 @@ async function run() {
       const result = await bookedCollection.find(cursor).toArray() ;
       res.send(result)
     })
-    
+    //description, serviceArea, serviceImage, serviceName, servicePrice
+    //upName, upArea, upDescrip,upPhoto, upPrice
     // update data from manage route
     app.put('/eduServices/:id', async(req, res) => {
       const id = req.params.id ;
       const query = {_id : new ObjectId(id)} ;
       const updateServiceData = req.body ; 
-      const options = { upsert: true };
+      // console.log(updateServiceData)
+      const option = { upsert: true };
       const updateDoc = {
         $set: {
-          ...updateServiceData,
+          serviceName : updateServiceData.upName,
+          serviceArea : updateServiceData.upArea,
+          serviceImage : updateServiceData.upPhoto,
+          description : updateServiceData.upDescrip,
+          servicePrice : updateServiceData.upPrice,
         },
       }
-      const result = await eduServCollection.updateOne(query, updateDoc, options);
+      const result = await eduServCollection.updateOne(query, updateDoc, option);
       res.send(result)
     })
     
@@ -89,6 +96,7 @@ async function run() {
       const result = await bookedCollection.insertOne(bookData) ;
       res.send(result)
     })
+
     // delete data from manage router
     app.delete('/eduServices/:id',async(req,res) => {
       const id = req.params.id ;
@@ -96,6 +104,7 @@ async function run() {
       const result = await eduServCollection.deleteOne(query);
       res.send(result)
     })
+
     // delete data from manage router
     app.delete('/bookedServices/:id',async(req,res) => {
       const id = req.params.id ;
