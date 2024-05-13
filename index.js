@@ -3,8 +3,7 @@ const app = express() ;
 const cors = require('cors');
 require ('dotenv').config();
 const port = process.env.PORT || 5000 ;
-//OmR9aMx5RfAaSBnU
-//serviceSharing
+
 app.use(cors());
 app.use(express.json())
 
@@ -35,9 +34,14 @@ async function run() {
 
     // Educational all service get
     app.get('/eduServices', async(req, res) => {
-        const cursor = eduServCollection.find( ) ;
-        const result = await cursor.toArray( ) ;
-        res.send(result)
+      const page = parseInt(req.query.page)
+      const size = parseInt(req.query.size)
+      console.log(page, size)
+        const cursor = await eduServCollection.find()
+        .skip(page * size)
+        .limit(size)
+        .toArray();
+        res.send(cursor)
     })
     // Book all service get
     app.get('/bookedServices', async(req, res) => {
@@ -61,8 +65,14 @@ async function run() {
       const result = await bookedCollection.find(cursor).toArray() ;
       res.send(result)
     })
-    //description, serviceArea, serviceImage, serviceName, servicePrice
-    //upName, upArea, upDescrip,upPhoto, upPrice
+
+    // Pagination 
+    app.get('/serviceCount', async (req,res)=> {
+      const countData = await bookedCollection.estimatedDocumentCount() ;
+      res.send({countData})
+    })
+    
+
     // update data from manage route
     app.put('/eduServices/:id', async(req, res) => {
       const id = req.params.id ;
