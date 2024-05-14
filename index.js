@@ -92,6 +92,19 @@ async function run() {
       const result = await eduServCollection.updateOne(query, updateDoc, option);
       res.send(result)
     })
+
+    // data updata only status
+    app.patch('/bookedServices/:id', async (req, res) =>{
+      const id = req.params.id ;
+      // console.log(id);
+      const query = {_id : new ObjectId(id)} ;
+      const status = req.body ;
+      const updateDoc = {
+        $set: status ,
+      }
+      const result = await bookedCollection.updateOne(query, updateDoc) ;
+      res.send(result)
+    } )
     
     // data post from provider 
     app.post('/eduServices',async(req,res) => {
