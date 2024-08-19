@@ -1,17 +1,15 @@
-const express = require('express');
-const app = express() ;
-const cors = require('cors');
-require ('dotenv').config();
-const port = process.env.PORT || 5000 ;
+const express = require("express");
+const app = express();
+const cors = require("cors");
+require("dotenv").config();
+const nodemailer = require("nodemailer");
+const port = process.env.PORT || 5000;
 
 app.use(cors());
-app.use(express.json())
-
+app.use(express.json());
 
 // MongoDB Connection
-
-const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
-
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ylmjbhk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
@@ -20,11 +18,51 @@ const client = new MongoClient(uri, {
     version: ServerApiVersion.v1,
     strict: true,
     deprecationErrors: true,
-  }
+  },
 });
 
-async function run() {
+// send Email to visitor
+const sendEmail = (visitorEmail, emailSubject) => {
+  // transporter bcoz it free
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false, // Use `true` for port 465, `false` for all other ports
+    auth: {
+      user: process.env.MANAGER_EMAIL,
+      pass: process.env.MANAGER_PASS,
+    },
+  });
 
+  // verify connection configuration
+  transporter.verify(function (error, success) {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Server is ready to take our messages", success);
+    }
+  });
+
+  // email body
+  const emailBody = {
+    from: `"Service sharing " <${process.env.MANAGER_EMAIL}>`, // sender address
+    to: visitorEmail, // list of receivers
+    subject: emailSubject.subject, // Subject line
+    html: emailSubject.message, // html body
+  };
+
+  // Send mail to visitor
+  transporter.sendMail(emailBody, (error, infor) => {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("email send info", infor.response);
+    }
+  });
+};
+
+async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     // await client.connect();
@@ -33,122 +71,127 @@ async function run() {
     const bookedCollection = database.collection("bookedCourse");
 
     // Educational all service get
-    app.get('/eduServices', async(req, res) => {
-      const page = parseInt(req.query.page)
-      const size = parseInt(req.query.size)
-      console.log(page, size)
-        const cursor = await eduServCollection.find()
+    app.get("/eduServices", async (req, res) => {
+      const page = parseInt(req.query.page);
+      const size = parseInt(req.query.size);
+      // console.log(page, size)
+      const cursor = await eduServCollection
+        .find()
         .skip(page * size)
         .limit(size)
         .toArray();
-        res.send(cursor)
-    })
+      res.send(cursor);
+    });
     // Book all service get
-    app.get('/bookedServices', async(req, res) => {
-        const cursor = bookedCollection.find( ) ;
-        const result = await cursor.toArray( ) ;
-        res.send(result)
-    })
+    app.get("/bookedServices", async (req, res) => {
+      const cursor = bookedCollection.find();
+      const result = await cursor.toArray();
+      res.send(result);
+    });
 
-    // find a data by id query 
-    app.get('/eduServices/:id',async(req, res) => {
-        const id = req.params.id ;
-        const query = { _id: new ObjectId(id) };
-        const result = await eduServCollection.findOne(query);
-        res.send(result)
-    })
+    // find a data by id query
+    app.get("/eduServices/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await eduServCollection.findOne(query);
+      res.send(result);
+    });
 
-    // find data by email 
-    app.get('/bookedServices/:email', async(req,res) => {
+    // find data by email
+    app.get("/bookedServices/:email", async (req, res) => {
       const email = req.params.email;
       const cursor = { currentUserEmail: email };
-      const result = await bookedCollection.find(cursor).toArray() ;
-      res.send(result)
-    })
+      const result = await bookedCollection.find(cursor).toArray();
+      res.send(result);
+    });
 
-    // Pagination 
-    app.get('/serviceCount', async (req,res)=> {
-      const countData = await bookedCollection.estimatedDocumentCount() ;
-      res.send({countData})
-    })
-    
+    // Pagination
+    app.get("/serviceCount", async (req, res) => {
+      const countData = await bookedCollection.estimatedDocumentCount();
+      res.send({ countData });
+    });
 
     // update data from manage route
-    app.put('/eduServices/:id', async(req, res) => {
-      const id = req.params.id ;
-      const query = {_id : new ObjectId(id)} ;
-      const updateServiceData = req.body ; 
+    app.put("/eduServices/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updateServiceData = req.body;
       // console.log(updateServiceData)
       const option = { upsert: true };
       const updateDoc = {
         $set: {
-          serviceName : updateServiceData.upName,
-          serviceArea : updateServiceData.upArea,
-          serviceImage : updateServiceData.upPhoto,
-          description : updateServiceData.upDescrip,
-          servicePrice : updateServiceData.upPrice,
+          serviceName: updateServiceData.upName,
+          serviceArea: updateServiceData.upArea,
+          serviceImage: updateServiceData.upPhoto,
+          description: updateServiceData.upDescrip,
+          servicePrice: updateServiceData.upPrice,
         },
-      }
-      const result = await eduServCollection.updateOne(query, updateDoc, option);
-      res.send(result)
-    })
+      };
+      const result = await eduServCollection.updateOne(
+        query,
+        updateDoc,
+        option
+      );
+      res.send(result);
+    });
 
     // data updata only status
-    app.patch('/bookedServices/:id', async (req, res) =>{
-      const id = req.params.id ;
+    app.patch("/bookedServices/:id", async (req, res) => {
+      const id = req.params.id;
       // console.log(id);
-      const query = {_id : new ObjectId(id)} ;
-      const status = req.body ;
+      const query = { _id: new ObjectId(id) };
+      const status = req.body;
       const updateDoc = {
-        $set: status ,
-      }
-      const result = await bookedCollection.updateOne(query, updateDoc) ;
-      res.send(result)
-    } )
-    
-    // data post from provider 
-    app.post('/eduServices',async(req,res) => {
-      const addData = req.body ;
-      const result = await eduServCollection.insertOne(addData) ;
-      res.send(result)
-    })
+        $set: status,
+      };
+      const result = await bookedCollection.updateOne(query, updateDoc);
+      res.send(result);
+    });
+
+    // data post from provider
+    app.post("/eduServices", async (req, res) => {
+      const addData = req.body;
+      const result = await eduServCollection.insertOne(addData);
+      res.send(result);
+    });
 
     // Booked Data from client
-    app.post('/bookedServices',async(req,res) => {
-      const bookData = req.body ;
-      const result = await bookedCollection.insertOne(bookData) ;
-      res.send(result)
-    })
+    app.post("/bookedServices", async (req, res) => {
+      const bookData = req.body;
+      const result = await bookedCollection.insertOne(bookData);
+      res.send(result);
+    });
 
     // delete data from manage router
-    app.delete('/eduServices/:id',async(req,res) => {
-      const id = req.params.id ;
-      const query = {_id : new ObjectId(id)} ;
+    app.delete("/eduServices/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
       const result = await eduServCollection.deleteOne(query);
-      res.send(result)
-    })
+      res.send(result);
+    });
 
     // delete data from manage router
-    app.delete('/bookedServices/:id',async(req,res) => {
-      const id = req.params.id ;
-      const query = {_id : new ObjectId(id)} ;
+    app.delete("/bookedServices/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
       const result = await bookedCollection.deleteOne(query);
-      res.send(result)
-    })
+      res.send(result);
+    });
 
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
-    console.log ("Pinged your deployment. You successfully connected to MongoDB!");
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
   } finally {
     // Ensures that the client will close when you finish/error
   }
 }
 run().catch(console.dir);
 
-
-app.get('/',(req,res)=>{
-    res.send('Service sharing server is cooming broh')
-})
-app.listen(port, ()=>{
-    console.log(`Service sharing server port is ${port}`)
-})
+app.get("/", (req, res) => {
+  res.send("Service sharing server is cooming broh");
+});
+app.listen(port, () => {
+  console.log(`Service sharing server port is ${port}`);
+});
