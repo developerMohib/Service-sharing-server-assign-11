@@ -8,27 +8,12 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-// MongoDB Connection
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ylmjbhk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
-
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
-});
-
-// send Email to visitor
 const sendEmail = (visitorEmail, emailSubject) => {
-  // transporter bcoz it free
+  // transporter configuration
   const transporter = nodemailer.createTransport({
-    service: "gmail",
     host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // Use `true` for port 465, `false` for all other ports
+    port: 465,
+    secure: true, // Use `true` for port 465, `false` for all other ports
     auth: {
       user: process.env.MANAGER_EMAIL,
       pass: process.env.MANAGER_PASS,
@@ -45,22 +30,35 @@ const sendEmail = (visitorEmail, emailSubject) => {
   });
 
   // email body
-  const emailBody = {
-    from: `"Service sharing " <${process.env.MANAGER_EMAIL}>`, // sender address
-    to: visitorEmail, // list of receivers
-    subject: emailSubject.subject, // Subject line
-    html: emailSubject.message, // html body
+  const mailOptions = {
+    from: "mohibullahmohim2020@gmail.com",
+    to: visitorEmail,
+    subject: emailSubject.subject,
+    text: "We will touch you as soon as possible, Thank you for visiting, Your important query is enough valueable to use !",
   };
 
   // Send mail to visitor
-  transporter.sendMail(emailBody, (error, infor) => {
+  transporter.sendMail(mailOptions, function (error, info) {
     if (error) {
       console.log(error);
     } else {
-      console.log("email send info", infor.response);
+      console.log("Email sent: " + info.response);
     }
   });
 };
+
+// MongoDB Connection
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ylmjbhk.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  },
+});
 
 async function run() {
   try {
@@ -160,6 +158,14 @@ async function run() {
       const bookData = req.body;
       const result = await bookedCollection.insertOne(bookData);
       res.send(result);
+    });
+
+    app.post("/contact", async (req, res) => {
+      const visitorData = req.body;
+      console.log("167 contact", visitorData);
+      const email = visitorData?.email;
+      const subject = visitorData?.subject;
+      sendEmail(email, subject);
     });
 
     // delete data from manage router
