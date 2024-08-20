@@ -8,7 +8,8 @@ const port = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-const sendEmail = (visitorEmail, emailSubject) => {
+const sendEmail = (visitorName,visitorEmail, emailSubject) => {
+  
   // transporter configuration
   const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
@@ -29,16 +30,33 @@ const sendEmail = (visitorEmail, emailSubject) => {
     }
   });
 
-  // email body
-  const mailOptions = {
-    from: "mohibullahmohim2020@gmail.com",
+  // Auto-response email to the user
+  const userMailOptions = {
+    from: process.env.MANAGER_EMAIL,
     to: visitorEmail,
-    subject: emailSubject.subject,
-    text: "We will touch you as soon as possible, Thank you for visiting, Your important query is enough valueable to use !",
+    subject: 'Thank you for contacting us',
+    text: `Hi ${visitorName},\n\nThank you for reaching out! We will get back to you soon.\n\nBest regards,\nOnline Service`,
   };
 
-  // Send mail to visitor
-  transporter.sendMail(mailOptions, function (error, info) {
+  // Email to yourself with the user's message
+  const adminMailOptions = {
+    from: process.env.MANAGER_EMAIL,
+    to: process.env.MANAGER_EMAIL, // Your email address
+    subject: `New Contact Form Submission from ${visitorName}`,
+    text: `Name: ${visitorName}\nEmail: ${visitorEmail}\nMessage: ${emailSubject}`,
+  };
+
+  // Auto-response email to the user
+  transporter.sendMail(userMailOptions, function (error, info) {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Email sent: " + info.response);
+    }
+  });
+
+  // Email to yourself with the user's message
+  transporter.sendMail(adminMailOptions, function (error, info) {
     if (error) {
       console.log(error);
     } else {
@@ -162,10 +180,11 @@ async function run() {
 
     app.post("/contact", async (req, res) => {
       const visitorData = req.body;
-      console.log("167 contact", visitorData);
+      const name = visitorData?.name ;
       const email = visitorData?.email;
       const subject = visitorData?.subject;
-      sendEmail(email, subject);
+      // to visitor
+      sendEmail(name,email, subject);
     });
 
     // delete data from manage router
