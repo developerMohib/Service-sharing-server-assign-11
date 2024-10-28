@@ -1,0 +1,5 @@
+DB_USER=serviceSharing
+DB_PASS=OmR9aMx5RfAaSBnU
+
+MANAGER_EMAIL='mohibullahmohim2020@gmail.com'
+MANAGER_PASS='febc xtww jvoq vnlf'
